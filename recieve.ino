@@ -18,7 +18,6 @@ int next_payload_size = min_payload_size;
 
 
 void setup(void){
-  Serial.begin(9600);
   Serial.begin(57600);
   //printf_begin();
   radio.begin();
