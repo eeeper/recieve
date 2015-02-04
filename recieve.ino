@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include "nRF24L01.h"
 #include "RF24.h"
+//#include "printf.h" 
 
 
 
@@ -22,7 +23,7 @@ void setup(void){
   radio.begin();
   radio.enableDynamicPayloads();
   radio.setRetries(15,15);
-  //radio.setPayloadSize(8);
+  radio.enableAckPayload();
   radio.openReadingPipe(1,pipes[0]);
   radio.startListening();
   radio.printDetails();
@@ -30,32 +31,34 @@ void setup(void){
 }
 
 void loop(void){
+  uint8_t len;
+  static uint32_t message_count = 0;
+  
   if ( radio.available() )
     {
       // Dump the payloads until we've gotten everything
-      uint8_t len;
       bool done = false;
       while (!done)
       {
         // Fetch the payload, and see if this was the last one.
 	len = radio.getDynamicPayloadSize();
-	done = radio.read( receive_payload, len );
-
+	done = radio.read(receive_payload, len );
+        radio.writeAckPayload( 1, &message_count, sizeof(message_count) );
+          ++message_count;
+      Serial.println(message_count);
 	// Put a zero at the end for easy printing
 	receive_payload[len] = 0;
 
 	// Spew it
-	printf("Got payload size=%i value=%s\n\r",len,receive_payload);
+	//printf("Got payload size=%i value=%s\n\r",len,receive_payload);
         Serial.println(len);
         Serial.println(receive_payload[0]);
-      }
-
-      // First, stop listening so we can talk
-      radio.stopListening();
-   
-
-      // Now, resume listening so we catch the next packets.
-      radio.startListening();
+        
+     }
+     //sets it to listen every 3 seconds for the transmitter is transmitting every 2 seconds
+     delay(3000);
     }
+    else{Serial.println("Nothing");}
 }
+
 
